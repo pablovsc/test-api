@@ -1,0 +1,165 @@
+INTEGRACIÓN COPILOT STUDIO CON API PYTHON/FASTAPI
+=================================================
+
+ARQUITECTURA:
+- Copilot Studio (Frontend del chatbot)
+- FastAPI (API REST con PostgreSQL)
+- PostgreSQL (Base de datos)
+
+PASOS DE CONFIGURACIÓN:
+======================
+
+1. CONFIGURAR LA API:
+   - Instalar dependencias: pip install -r requirements.txt
+   - Configurar .env con credenciales de PostgreSQL
+   - Ejecutar database.sql en PostgreSQL
+   - Iniciar API: python main.py
+   - Probar en: http://localhost:8000/api/query
+   - Documentación: http://localhost:8000/docs
+
+2. CREAR BOT EN COPILOT STUDIO:
+   - Ir a https://copilotstudio.microsoft.com
+   - Crear nuevo chatbot
+   - Nombre: "Asistente con Base de Datos"
+
+3. CREAR TEMA PERSONALIZADO:
+   - Ir a "Temas" (Topics)
+   - Hacer clic en "+ Nuevo tema" (+ New topic)
+   - Seleccionar "Desde cero" (From blank)
+   - Nombre: "Consulta Base de Datos"
+
+4. CONFIGURAR FRASES DESENCADENANTES:
+   Al crear el tema, automáticamente aparece la sección "Frases desencadenantes":
+   - Escribir en el campo de texto:
+     * "consultar"
+     * "buscar información" 
+     * "necesito ayuda"
+     * "pregunta"
+   - Presionar Enter después de cada frase
+   - Hacer clic en "Guardar" o "Ir al lienzo de creación"
+
+5. AGREGAR NODO DE MENSAJE INICIAL:
+   - En el lienzo aparece automáticamente "Condición de desencadenador"
+   - Hacer clic en "+" debajo del desencadenador
+   - Seleccionar "Enviar un mensaje" para confirmar que el tema se activó
+   - Escribir: "Entendido, voy a buscar esa información..."
+
+6. AGREGAR ACCIÓN HTTP:
+   - Hacer clic en "+" debajo del mensaje
+   - Seleccionar "Llamar a una acción" (Call an action)
+   - Elegir "Crear un flujo" (Create a flow) - esto abre Power Automate
+
+7. CONFIGURACIÓN DE POWER AUTOMATE FLOW:
+
+   DESENCADENADOR (TRIGGER):
+   - Buscar "Power Virtual Agents"
+   - Seleccionar "Cuando Power Virtual Agents llama a un flujo"
+   - Agregar entrada: "consulta" (Texto)
+
+   ACCIÓN HTTP:
+   - Agregar acción "HTTP"
+   - URI: http://localhost:8000/api/query
+   - Método: POST
+   - Encabezados: Content-Type = application/json
+   - Cuerpo: {"query": "@{triggerBody()['text']}"}
+
+   RESPUESTA:
+   - Agregar "Responder a Power Virtual Agents"
+   - Salida: "respuestaBot" (Texto)
+   - Valor: @{body('HTTP')['answer']}
+   - Guardar el flujo
+
+8. CONFIGURAR RESPUESTA EN COPILOT STUDIO:
+   - Volver al tema en Copilot Studio
+   - Hacer clic en "+" debajo de la acción
+   - Seleccionar "Enviar un mensaje"
+   - Texto: {x}topic.respuestaBot{x}
+
+9. PUBLICAR Y PROBAR:
+   - Guardar el tema
+   - Ir a "Publicar" > "Publicar"
+   - Probar en "Probar el bot" (chat de prueba)
+   - Escribir: "consultar horario" o "buscar información sobre productos"
+
+SOLUCIÓN ALTERNATIVA SIN POWER AUTOMATE:
+=========================================
+
+Si no puedes usar Power Automate, usa el conector HTTP directo:
+
+1. EN EL TEMA:
+   - Agregar nodo "Llamar a una acción"
+   - Seleccionar "Crear conector personalizado"
+   - O buscar "HTTP" en conectores disponibles
+
+2. CONFIGURACIÓN HTTP DIRECTA:
+   - URL: http://localhost:8000/api/query
+   - Método: POST
+   - Encabezados: Content-Type: application/json
+   - Cuerpo: {"query": "{x}System.Activity.Text{x}"}
+
+3. USAR RESPUESTA:
+   - Variable: topic.apiResponse
+   - Mensaje: {x}topic.apiResponse.answer{x}
+
+CONFIGURACIÓN ALTERNATIVA (HTTP DIRECTO):
+========================================
+
+Si Copilot Studio permite HTTP Request directo:
+
+1. AGREGAR HTTP REQUEST NODE:
+   - URL: http://localhost:8000/api/query
+   - Method: POST
+   - Headers: Content-Type: application/json
+   - Body: {"query": "{x}System.Activity.Text{x}"}
+
+2. CONFIGURAR RESPUESTA:
+   - Variable: topic.apiResponse
+   - Mensaje: {x}topic.apiResponse.answer{x}
+
+PRUEBAS RECOMENDADAS:
+====================
+
+Probar estas consultas en el chatbot:
+- "horario"
+- "contacto"
+- "productos"
+- "precios"
+- "ubicación"
+- "soporte"
+
+ENDPOINT DE LA API:
+==================
+
+POST http://localhost:8000/api/query
+Content-Type: application/json
+
+{
+  "query": "horario"
+}
+
+DOCUMENTACIÓN INTERACTIVA:
+http://localhost:8000/docs
+
+RESPUESTA:
+{
+  "success": true,
+  "answer": "Nuestro horario es de lunes a viernes de 9:00 AM a 6:00 PM"
+}
+
+NOTAS IMPORTANTES:
+=================
+
+1. La API debe estar ejecutándose cuando uses el chatbot
+2. Si usas localhost, solo funcionará en tu máquina local
+3. Para producción, despliega la API en Azure, AWS o similar
+4. Asegúrate de que PostgreSQL esté ejecutándose
+5. Verifica que las credenciales en .env sean correctas
+
+DESPLIEGUE EN PRODUCCIÓN:
+========================
+
+Para usar en producción:
+1. Despliega la API en un servidor (Azure App Service, Heroku, etc.)
+2. Cambia localhost por la URL real en Copilot Studio
+3. Configura PostgreSQL en la nube (Azure Database, AWS RDS, etc.)
+4. Actualiza las variables de entorno en el servidor
