@@ -59,21 +59,20 @@ PASOS DE CONFIGURACIÓN:
    ACCIÓN HTTP:
    - Agregar acción "HTTP"
    - URI: http://localhost:8000/api/query
-   - Método: POST
-   - Encabezados: Content-Type = application/json
-   - Cuerpo: {"query": "@{triggerBody()['text']}"}
+   - Método: GET
+   - Sin encabezados ni cuerpo necesarios
 
    RESPUESTA:
    - Agregar "Responder a Power Virtual Agents"
-   - Salida: "respuestaBot" (Texto)
-   - Valor: @{body('HTTP')['answer']}
+   - Salida: "datosCompletos" (Texto)
+   - Valor: @{body('HTTP')}
    - Guardar el flujo
 
 8. CONFIGURAR RESPUESTA EN COPILOT STUDIO:
    - Volver al tema en Copilot Studio
    - Hacer clic en "+" debajo de la acción
    - Seleccionar "Enviar un mensaje"
-   - Texto: {x}topic.respuestaBot{x}
+   - Texto: {x}topic.datosCompletos{x}
 
 9. PUBLICAR Y PROBAR:
    - Guardar el tema
@@ -93,13 +92,12 @@ Si no puedes usar Power Automate, usa el conector HTTP directo:
 
 2. CONFIGURACIÓN HTTP DIRECTA:
    - URL: http://localhost:8000/api/query
-   - Método: POST
-   - Encabezados: Content-Type: application/json
-   - Cuerpo: {"query": "{x}System.Activity.Text{x}"}
+   - Método: GET
+   - Sin encabezados ni cuerpo necesarios
 
 3. USAR RESPUESTA:
    - Variable: topic.apiResponse
-   - Mensaje: {x}topic.apiResponse.answer{x}
+   - Mensaje: {x}topic.apiResponse{x}
 
 CONFIGURACIÓN ALTERNATIVA (HTTP DIRECTO):
 ========================================
@@ -108,42 +106,44 @@ Si Copilot Studio permite HTTP Request directo:
 
 1. AGREGAR HTTP REQUEST NODE:
    - URL: http://localhost:8000/api/query
-   - Method: POST
-   - Headers: Content-Type: application/json
-   - Body: {"query": "{x}System.Activity.Text{x}"}
+   - Method: GET
+   - Sin headers ni body necesarios
 
 2. CONFIGURAR RESPUESTA:
    - Variable: topic.apiResponse
-   - Mensaje: {x}topic.apiResponse.answer{x}
+   - Mensaje: {x}topic.apiResponse{x}
 
 PRUEBAS RECOMENDADAS:
 ====================
 
-Probar estas consultas en el chatbot:
-- "horario"
-- "contacto"
-- "productos"
-- "precios"
-- "ubicación"
-- "soporte"
+El chatbot ahora retorna TODA la información disponible en la base de datos.
+Cualquier mensaje activará el tema y mostrará todas las preguntas y respuestas.
+
+Ejemplos de activación:
+- "consultar"
+- "buscar información"
+- "necesito ayuda"
+- "pregunta"
 
 ENDPOINT DE LA API:
 ==================
 
-POST http://localhost:8000/api/query
-Content-Type: application/json
+GET http://localhost:8000/api/query
 
-{
-  "query": "horario"
-}
+(Sin parámetros necesarios)
 
 DOCUMENTACIÓN INTERACTIVA:
 http://localhost:8000/docs
 
-RESPUESTA:
+RESPUESTA (múltiples resultados):
 {
   "success": true,
-  "answer": "Nuestro horario es de lunes a viernes de 9:00 AM a 6:00 PM"
+  "multiple_results": true,
+  "answers": [
+    {"topic": "¿Cuál es el horario?", "answer": "Lunes a viernes de 9:00 AM a 6:00 PM"},
+    {"topic": "¿Cómo contactar?", "answer": "Teléfono: 123-456-7890"},
+    {"topic": "¿Qué productos tienen?", "answer": "Ofrecemos servicios de consultoría"}
+  ]
 }
 
 NOTAS IMPORTANTES:
