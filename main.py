@@ -16,8 +16,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class QueryRequest(BaseModel):
-    query: str
+
 
 def get_db_connection():
     # Railway proporciona DATABASE_URL automáticamente
@@ -34,16 +33,18 @@ def get_db_connection():
             port=os.getenv("DB_PORT", "5432")
         )
 
-@app.post("/api/query")
-async def query_database(request: QueryRequest):
+@app.get("/api/query")
+async def query_database():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
         
         cursor.execute(
-            "SELECT question, answer FROM faq WHERE question ILIKE %s",
-            (f"%{request.query}%",)
+            "SELECT question, answer FROM faq "
         )
+        """ WHERE question ILIKE %s",
+            (f"%{request.query}%",)
+        """
         
         results = cursor.fetchall()
         cursor.close()
