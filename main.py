@@ -41,16 +41,20 @@ async def query_database(request: QueryRequest):
         cursor = conn.cursor()
         
         cursor.execute(
-            "SELECT answer FROM faq WHERE question ILIKE %s LIMIT 1",
+            "SELECT question, answer FROM faq WHERE question ILIKE %s",
             (f"%{request.query}%",)
         )
         
-        result = cursor.fetchone()
+        results = cursor.fetchall()
         cursor.close()
         conn.close()
         
-        if result:
-            return {"success": True, "answer": result[0]}
+        if results:
+            if len(results) == 1:
+                return {"success": True, "answer": results[0][1]}
+            else:
+                answers = [{"topic": row[0], "answer": row[1]} for row in results]
+                return {"success": True, "multiple_results": True, "answers": answers}
         else:
             return {
                 "success": False, 
